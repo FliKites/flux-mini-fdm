@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
 
-if [ -n "$DOMAIN" ] then
+if [ -n "$DOMAIN" ]; then
     if [ "$STAGING" = true ]; then
-      if [ -n "$ACME" ] then
-        certbot certonly --no-self-upgrade -n --text --standalone \
-        --preferred-challenges http-01 \
-        --staging \
-        -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
-      else
-        certbot certonly --no-self-upgrade -n --text --standalone \
-        --preferred-challenges http-01 \
-        --staging \
-        -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
-      fi
+        if [ -n "$ACME" ]; then
+            certbot certonly --no-self-upgrade -n --text --standalone \
+            --preferred-challenges http-01 \
+            --staging \
+            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
+        else
+            certbot certonly --no-self-upgrade -n --text --standalone \
+            --preferred-challenges http-01 \
+            --staging \
+            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
+        fi
     else
-      if [ -n "$ACME" ] then
-        certbot certonly --no-self-upgrade -n --text --standalone \
-        --preferred-challenges http-01 \
-        -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
-      else
-        certbot certonly --no-self-upgrade -n --text --standalone \
-        --preferred-challenges http-01 \
-        -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
-      fi
+        if [ -n "$ACME" ]; then
+            certbot certonly --no-self-upgrade -n --text --standalone \
+            --preferred-challenges http-01 \
+            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
+        else
+            certbot certonly --no-self-upgrade -n --text --standalone \
+            --preferred-challenges http-01 \
+            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
+        fi
     fi
 
     mkdir -p /etc/haproxy/certs

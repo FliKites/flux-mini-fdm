@@ -31,7 +31,12 @@ LOGFILE=""
 ################################################################################
 
 function issueCert {
-  $LE_CLIENT certonly --text --webroot --webroot-path ${WEBROOT} --renew-by-default --agree-tos --email ${EMAIL} ${1} &>/dev/null
+  if [ -n "$ACME" ]; then
+      $LE_CLIENT certonly --server ${ACME} --text --webroot --webroot-path ${WEBROOT} --renew-by-default --agree-tos --email ${EMAIL} ${1} &>/dev/null
+  else
+      $LE_CLIENT certonly --text --webroot --webroot-path ${WEBROOT} --renew-by-default --agree-tos --email ${EMAIL} ${1} &>/dev/null
+  fi
+  
   return $?
 }
 
