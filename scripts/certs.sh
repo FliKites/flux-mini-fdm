@@ -6,22 +6,22 @@ if [ -n "$DOMAIN" ]; then
             certbot certonly --no-self-upgrade -n --text --standalone \
             --preferred-challenges http-01 \
             --staging \
-            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
+            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \;
         else
             certbot certonly --no-self-upgrade -n --text --standalone \
             --preferred-challenges http-01 \
             --staging \
-            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
+            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \;
         fi
     else
         if [ -n "$ACME" ]; then
             certbot certonly --no-self-upgrade -n --text --standalone \
             --preferred-challenges http-01 \
-            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \
+            -d "$DOMAIN" --server "$ACME" --keep --expand --agree-tos --email "$EMAIL" \;
         else
             certbot certonly --no-self-upgrade -n --text --standalone \
             --preferred-challenges http-01 \
-            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \
+            -d "$DOMAIN" --keep --expand --agree-tos --email "$EMAIL" \;
         fi
     fi
 
