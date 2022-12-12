@@ -42,6 +42,10 @@ The provided haproxy configuration file comes with the "resolver docker" directi
 
 To enable stats UI you can map it to the container port `8080`.
 
+### Custom ACME server
+
+    docker run [...] -e ACME=https://youracmeserver alihmahdavi/flux-mini-fdm:latest
+
 ### Renewal cron job
 
 Once a week a cron job checks for expiring certificates with certbot agent and reload haproxy if a certificate is renewed. No container restart needed.
