@@ -40,7 +40,7 @@ docker run --name lb -d \
 IMPORTANT: Use the provided haproxy config file in `conf` folder as the template.
 The provided haproxy configuration file comes with the "resolver docker" directive to permit DNS run-time resolution on backend hosts (see https://github.com/gesellix/docker-haproxy-network)
 
-To enable stats UI you can map it to the container port `8080`.
+To enable stats UI you can bind it to the container port `8080`.
 
 ### Custom ACME server
 
