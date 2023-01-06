@@ -29,6 +29,7 @@ docker run --name lb -d \
     -e DOMAIN=my.domain \
     -e EMAIL=my.email@my.domain \
     -e STAGING=false \
+    -e STICKY=false \
     -p 80:80 -p 443:443 \
     alihmahdavi/flux-mini-fdm:latest
 ```
