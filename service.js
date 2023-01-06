@@ -11,7 +11,7 @@ const timer = require('timers/promises');
 const configFile = '/etc/haproxy/haproxy.cfg';
 const appName = process.env.APP_NAME || 'explorer';
 const appPort = process.env.APP_PORT || 39185;
-const stickySession = process.env.STICKY || false;
+const stickySession = process.env.STICKY || true;
 const cmdAsync = util.promisify(nodecmd.run);
 
 async function getApplicationIP(_appName) {
@@ -57,12 +57,12 @@ async function updateList() {
         await timer.setTimeout(500);
       }
       let config = await getHAConfig();
-      if (stickySession) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n';
+      if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n';
       for (let i = 0; i < ipList.length; i += 1) {
         const serverIP = convertIP(ipList[i].ip);
-        const serverID = `ip_${serverIP.replace('.', '_')}`;
+        const serverID = `ip_${serverIP.replaceAll('.', '_')}`;
         let stikyCoockie = '';
-        if (stickySession) stikyCoockie = ` cookie ${serverID}`;
+        if (stickySession === true) stikyCoockie = ` cookie ${serverID}`;
         config += `    server ${serverID} ${serverIP}:${appPort} check${stikyCoockie}\n`;
       }
       console.log(config);
