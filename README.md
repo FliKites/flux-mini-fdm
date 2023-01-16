@@ -43,11 +43,11 @@ The provided haproxy configuration file comes with the "resolver docker" directi
 
 ### Enable Haproxy Stats
 
-  docker run [...] -e STATS_USER=user -e STATS_PASS=pass -p 80:80 -p 443:443 -p 8080:8080 alihmahdavi/flux-mini-fdm:latest
+    docker run [...] -e STATS_USER=user -e STATS_PASS=pass -p 80:80 -p 443:443 -p 8080:8080 alihmahdavi/flux-mini-fdm:latest
 
 ### Enable Http Health Check
 
-  docker run [...] -e STATS_USER=user -e CHECK_URL=/ -e CHECK_STATUS=200 alihmahdavi/flux-mini-fdm:latest
+    docker run [...] -e STATS_USER=user -e CHECK_URL=/ -e CHECK_STATUS=200 alihmahdavi/flux-mini-fdm:latest
 
 ### Custom ACME server
 
