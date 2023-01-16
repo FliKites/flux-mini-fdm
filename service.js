@@ -50,8 +50,9 @@ async function getHAConfig() {
   return HAconfig;
 }
 
-function addStats(user, pass, HAconfig) {
-  HAconfig.replace('[STATS]', `[STATS]
+function addStats(user, pass) {
+  let HAconfig = fs.readFileSync(configFile).toString();
+  HAconfig = HAconfig.replace('[STATS]', `[STATS]
   listen stats
     bind :8080
     mode http
@@ -62,7 +63,7 @@ function addStats(user, pass, HAconfig) {
     stats auth ${user}:${pass}
 `);
 
-  return HAconfig;
+  fs.writeFileSync(configFile, HAconfig);
 }
 
 async function updateList() {
@@ -75,7 +76,6 @@ async function updateList() {
         await timer.setTimeout(500);
       }
       let config = await getHAConfig();
-      if (statUser && statPass) config = addStats(statUser, statPass, config);
       if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n';
       for (let i = 0; i < ipList.length; i += 1) {
         const serverIP = convertIP(ipList[i].ip);
@@ -94,4 +94,5 @@ async function updateList() {
   }
 }
 
+if (statUser && statPass) addStats(statUser, statPass);
 updateList();
