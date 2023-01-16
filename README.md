@@ -41,7 +41,13 @@ docker run --name lb -d \
 IMPORTANT: Use the provided haproxy config file in `conf` folder as the template.
 The provided haproxy configuration file comes with the "resolver docker" directive to permit DNS run-time resolution on backend hosts (see https://github.com/gesellix/docker-haproxy-network)
 
-To enable stats UI you can bind it to the container port `8080`.
+### Enable Haproxy Stats
+
+  docker run [...] -e STATS_USER=user -e STATS_PASS=pass -p 80:80 -p 443:443 -p 8080:8080 alihmahdavi/flux-mini-fdm:latest
+
+### Enable Http Health Check
+
+  docker run [...] -e STATS_USER=user -e CHECK_URL=/ -e CHECK_STATUS=200 alihmahdavi/flux-mini-fdm:latest
 
 ### Custom ACME server
 
