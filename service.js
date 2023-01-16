@@ -77,9 +77,9 @@ async function updateList() {
         await timer.setTimeout(500);
       }
       let config = await getHAConfig();
-      if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n';
-      if (checkURL) config += `    option httpchk\n    http-check send meth GET uri ${checkURL}\n`;
-      if (checkStatus) config += `    http-check expect status ${checkStatus}\n`;
+      if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n\n';
+      if (checkURL) config += `    option httpchk\n\n    http-check connect\n    http-check send meth GET uri ${checkURL}\n`;
+      if (checkURL && checkStatus) config += `    http-check expect status ${checkStatus}\n\n`;
       for (let i = 0; i < ipList.length; i += 1) {
         const serverIP = convertIP(ipList[i].ip);
         const serverID = `ip_${serverIP.replaceAll('.', '_')}`;
