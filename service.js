@@ -14,7 +14,8 @@ const appPort = process.env.APP_PORT || 39185;
 const stickySession = process.env.STICKY || true;
 const statUser = process.env.STAT_USER || null;
 const statPass = process.env.STAT_PASS || null;
-const check = process.env.CHECK || '';
+const checkURL = process.env.CHECK_URL || false;
+const checkStatus = process.env.CHECK_STATUS || false;
 const cmdAsync = util.promisify(nodecmd.run);
 
 async function getApplicationIP(_appName) {
@@ -53,7 +54,7 @@ async function getHAConfig() {
 function addStats(user, pass) {
   let HAconfig = fs.readFileSync(configFile).toString();
   HAconfig = HAconfig.replace('[STATS]', `[STATS]
-  listen stats
+listen stats
     bind :8080
     mode http
     stats enable
@@ -77,12 +78,14 @@ async function updateList() {
       }
       let config = await getHAConfig();
       if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n';
+      if (checkURL) config += `    option httpchk\n    http-check send meth GET uri ${checkURL}\n`;
+      if (checkStatus) config += `    http-check expect status ${checkStatus}\n`;
       for (let i = 0; i < ipList.length; i += 1) {
         const serverIP = convertIP(ipList[i].ip);
         const serverID = `ip_${serverIP.replaceAll('.', '_')}`;
         let stikyCoockie = '';
         if (stickySession === true) stikyCoockie = `cookie ${serverID}`;
-        config += `    server ${serverID} ${serverIP}:${appPort} check ${check} ${stikyCoockie}\n`;
+        config += `    server ${serverID} ${serverIP}:${appPort} check ${stikyCoockie}\n`;
       }
       console.log(config);
       fs.writeFileSync(configFile, config);
