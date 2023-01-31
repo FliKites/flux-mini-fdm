@@ -1,15 +1,15 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
-const axios = require('axios');
-const readline = require('readline');
-const fs = require('fs');
-const nodecmd = require('node-cmd');
-const util = require('util');
-const timer = require('timers/promises');
+const axios = require("axios");
+const readline = require("readline");
+const fs = require("fs");
+const nodecmd = require("node-cmd");
+const util = require("util");
+const timer = require("timers/promises");
 
-const configFile = '/etc/haproxy/haproxy.cfg';
-const appName = process.env.APP_NAME || 'explorer';
+const configFile = "/etc/haproxy/haproxy.cfg";
+const appName = process.env.APP_NAME || "explorer";
 const appPort = process.env.APP_PORT || 39185;
 const stickySession = process.env.STICKY || true;
 const statUser = process.env.STAT_USER || null;
@@ -20,8 +20,11 @@ const cmdAsync = util.promisify(nodecmd.run);
 
 async function getApplicationIP(_appName) {
   try {
-    const fluxnodeList = await axios.get(`https://api.runonflux.io/apps/location/${_appName}`, { timeout: 13456 });
-    if (fluxnodeList.data.status === 'success') {
+    const fluxnodeList = await axios.get(
+      `https://api.runonflux.io/apps/location/${_appName}`,
+      { timeout: 13456 }
+    );
+    if (fluxnodeList.data.status === "success") {
       return fluxnodeList.data.data || [];
     }
     return [];
@@ -32,12 +35,12 @@ async function getApplicationIP(_appName) {
 
 function convertIP(ip) {
   // eslint-disable-next-line no-param-reassign, prefer-destructuring
-  if (ip.includes(':')) ip = ip.split(':')[0];
+  if (ip.includes(":")) ip = ip.split(":")[0];
   return ip;
 }
 
 async function getHAConfig() {
-  let HAconfig = '';
+  let HAconfig = "";
   const fileStream = fs.createReadStream(configFile);
 
   const rl = readline.createInterface({
@@ -46,14 +49,16 @@ async function getHAConfig() {
   });
   for await (const line of rl) {
     HAconfig += `${line}\n`;
-    if (line.includes('[SERVERS]')) break;
+    if (line.includes("[SERVERS]")) break;
   }
   return HAconfig;
 }
 
 function addStats(user, pass) {
   let HAconfig = fs.readFileSync(configFile).toString();
-  HAconfig = HAconfig.replace('[STATS]', `[STATS]
+  HAconfig = HAconfig.replace(
+    "[STATS]",
+    `[STATS]
 listen stats
     bind :8080
     mode http
@@ -62,7 +67,8 @@ listen stats
     stats realm Haproxy\\ Statistics
     stats uri /
     stats auth ${user}:${pass}
-`);
+`
+  );
 
   fs.writeFileSync(configFile, HAconfig);
 }
@@ -77,19 +83,23 @@ async function updateList() {
         await timer.setTimeout(500);
       }
       let config = await getHAConfig();
-      if (stickySession === true) config += '    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n\n';
-      if (checkURL) config += `    option httpchk\n\n    http-check connect\n    http-check send meth GET uri ${checkURL}\n`;
-      if (checkURL && checkStatus) config += `    http-check expect status ${checkStatus}\n\n`;
+      if (stickySession === true)
+        config +=
+          "    cookie FLUXSERVERID insert indirect nocache maxlife 8h\n\n";
+      if (checkURL)
+        config += `    option httpchk\n\n    http-check connect\n    http-check send meth GET uri ${checkURL}\n`;
+      if (checkURL && checkStatus)
+        config += `    http-check expect status ${checkStatus}\n\n`;
       for (let i = 0; i < ipList.length; i += 1) {
         const serverIP = convertIP(ipList[i].ip);
-        const serverID = `ip_${serverIP.replaceAll('.', '_')}`;
-        let stikyCoockie = '';
+        const serverID = `ip_${serverIP.replaceAll(".", "_")}`;
+        let stikyCoockie = "";
         if (stickySession === true) stikyCoockie = `cookie ${serverID}`;
         config += `    server ${serverID} ${serverIP}:${appPort} check ${stikyCoockie}\n`;
       }
       console.log(config);
       fs.writeFileSync(configFile, config);
-      await cmdAsync('supervisorctl signal USR1 haproxy');
+      await cmdAsync("supervisorctl signal USR1 haproxy");
     } catch (err) {
       console.log(err);
     }
@@ -97,5 +107,52 @@ async function updateList() {
   }
 }
 
+async function createDNSRecord() {
+  try {
+    console.log("creating record");
+    const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
+    const DNS_ZONE = process.env.DNS_ZONE;
+    const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
+    const { data } = await axios.get("https://api.ipify.org/?format=json");
+    await axios.post(
+      DNS_SERVER_ADDRESS,
+      {
+        action: "addRecord",
+        zone: DNS_ZONE,
+        type: "A",
+        name: process.env.APP_NAME,
+        content: data.ip,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
+        },
+      }
+    );
+
+    const tlsa = fs
+      .readFileSync(`/etc/letsencrypt/${process.env.DOMAIN}_TLSA.txt`, "utf8")
+      .split(/\r?\n/)[0];
+    await axios.post(
+      DNS_SERVER_ADDRESS,
+      {
+        action: "addRecord",
+        zone: DNS_ZONE,
+        type: "TLSA",
+        name: `_443._tcp.${process.env.DOMAIN}`,
+        content: tlsa,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
+        },
+      }
+    );
+    console.log("DNS RECORD UPDATED");
+  } catch (error) {
+    console.log(error?.message ?? "unable to update dns records");
+  }
+}
 if (statUser && statPass) addStats(statUser, statPass);
 updateList();
+createDNSRecord();
