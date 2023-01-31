@@ -32,10 +32,10 @@ RUN apt-get update && apt-get install --no-install-recommends -yqq \
 # install haproxy from official debian repos (https://haproxy.debian.net/)
 
 RUN curl https://haproxy.debian.net/bernat.debian.org.gpg \
-       | gpg --dearmor > /usr/share/keyrings/haproxy.debian.net.gpg \
+    | gpg --dearmor > /usr/share/keyrings/haproxy.debian.net.gpg \
     && echo deb "[signed-by=/usr/share/keyrings/haproxy.debian.net.gpg]" \
-       http://haproxy.debian.net buster-backports-2.4 main \
-       > /etc/apt/sources.list.d/haproxy.list \
+    http://haproxy.debian.net buster-backports-2.4 main \
+    > /etc/apt/sources.list.d/haproxy.list \
     && apt-get update \
     && apt-get install -yqq haproxy=2.4.\* \
     && apt-get clean autoclean && apt-get autoremove -y \
@@ -61,6 +61,7 @@ RUN crontab /var/crontab.txt && chmod 600 /etc/crontab \
 # cert creation script & bootstrap
 COPY --chmod=777 scripts/certs.sh /
 COPY --chmod=777 scripts/bootstrap.sh /
+
 
 RUN mkdir /jail
 
