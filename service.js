@@ -114,40 +114,41 @@ async function createDNSRecord() {
     const DNS_ZONE = process.env.DNS_ZONE;
     const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
     const { data } = await axios.get("https://api.ipify.org/?format=json");
-    await axios.post(
-      DNS_SERVER_ADDRESS,
-      {
-        action: "addRecord",
-        zone: DNS_ZONE,
-        type: "A",
-        name: process.env.APP_NAME,
-        content: data.ip,
+    console.log("MY IP IS ", data?.ip);
+    const aRecordPayload = {
+      action: "addRecord",
+      zone: DNS_ZONE,
+      type: "A",
+      name: process.env.APP_NAME,
+      content: data.ip,
+    };
+    console.log(`A RECORD PAYLOAD: ${aRecordPayload}`);
+    await axios.post(DNS_SERVER_ADDRESS, aRecordPayload, {
+      headers: {
+        Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
-        },
-      }
-    );
-
+    });
+    console.log("A RECORD SUCCESS WITH IP: ", data?.ip);
     const tlsa = fs
       .readFileSync(`/etc/letsencrypt/${process.env.DOMAIN}_TLSA.txt`, "utf8")
       .split(/\r?\n/)[0];
-    await axios.post(
-      DNS_SERVER_ADDRESS,
-      {
-        action: "addRecord",
-        zone: DNS_ZONE,
-        type: "TLSA",
-        name: `_443._tcp.${process.env.DOMAIN}`,
-        content: tlsa,
+
+    const tlsaRecord = {
+      action: "addRecord",
+      zone: DNS_ZONE,
+      type: "TLSA",
+      name: `_443._tcp.${process.env.DOMAIN}`,
+      content: tlsa,
+    };
+
+    console.log(`TLSA RECORD PAYLOAD: ${tlsaRecord}`);
+
+    await axios.post(DNS_SERVER_ADDRESS, tlsaRecord, {
+      headers: {
+        Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
-        },
-      }
-    );
+    });
+    console.log("TLSA RECORD SUCCESS WITH TLSA: ", tlsa);
     console.log("DNS RECORD UPDATED");
   } catch (error) {
     console.log(error?.message ?? "unable to update dns records");
