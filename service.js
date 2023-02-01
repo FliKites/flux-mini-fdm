@@ -115,6 +115,9 @@ async function createDNSRecord() {
     const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
     const { data } = await axios.get("https://api.ipify.org/?format=json");
     console.log("MY IP IS ", data?.ip);
+    console.log("DNS_SERVER_API_KEY ", DNS_SERVER_API_KEY);
+    console.log("DNS_SERVER_ADDRESS ", DNS_SERVER_ADDRESS);
+    console.log("DNS_ZONE ", DNS_ZONE);
     const aRecordPayload = {
       action: "addRecord",
       zone: DNS_ZONE,
@@ -157,5 +160,9 @@ async function createDNSRecord() {
   }
 }
 if (statUser && statPass) addStats(statUser, statPass);
-updateList();
-createDNSRecord();
+async function main() {
+  await updateList();
+  await createDNSRecord();
+}
+
+main();
