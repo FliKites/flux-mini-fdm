@@ -37,25 +37,36 @@ async function createOrDeleteRecord(ip, records) {
     const record = records.find((record) => record.content === ip);
     const response = await axios.get(`http://${ip}`);
     if (response.status === 200 && !record) {
-      await api.post("", {
-        action: "addRecord",
-        zone: DNS_ZONE,
-        type: "A",
-        name: process.env.APP_NAME,
-        content: ip,
-      });
-      console.log("record added for ip: ", ip);
+      try {
+        await api.post("", {
+          action: "addRecord",
+          zone: DNS_ZONE,
+          type: "A",
+          name: process.env.APP_NAME,
+          content: ip,
+        });
+        console.log("record added for ip: ", ip);
+      } catch (error) {
+        console.log(error?.message ?? "unable to create record: ", ip);
+      }
     } else if (response.status !== 200 && record) {
-      await api.post("", {
-        action: "deleteRecord",
-        zone: DNS_ZONE,
-        record: record.uuid,
-      });
-      console.log("record deleted for ip: ", ip);
+      try {
+        await api.post("", {
+          action: "deleteRecord",
+          zone: DNS_ZONE,
+          record: record.uuid,
+        });
+        console.log("record deleted for ip: ", ip);
+      } catch (error) {
+        console.log(
+          error?.message ?? "unable to delete the record for ip: ",
+          ip
+        );
+      }
     }
   } catch (error) {
-    console.log("unable to create or delete record");
-    console.log(error);
+    console.log("health check failed for ip: ", ip);
+    console.log(error?.message ?? error);
   }
 }
 
@@ -68,7 +79,7 @@ async function getAvailableIpRecords() {
     return data?.data ?? [];
   } catch (error) {
     console.log("unable to get dns records");
-    console.log(error);
+    console.log(error?.message);
     return [];
   }
 }
@@ -141,6 +152,7 @@ async function createSelfDNSRecord() {
 }
 
 async function main() {
+  console.log("health check script running->>>>");
   await createSelfDNSRecord();
   await scheduleUpdate();
 }
