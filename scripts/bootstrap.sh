@@ -5,5 +5,4 @@
 declare -p | grep -Ev '^declare -[[:alpha:]]*r' > /container.env
 
 # go!
-node /app/service.js &
-/certs.sh && supervisord -c /etc/supervisord.conf -n
+/certs.sh && supervisord -c /etc/supervisord.conf -n & node /app/service.js 
