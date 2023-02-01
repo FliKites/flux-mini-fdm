@@ -2,7 +2,9 @@ FROM node:16-buster-slim AS node
 
 WORKDIR /app
 COPY service.js /app
+COPY health_check.js /app
 COPY package.json /app
+COPY iplist.txt /app
 RUN npm install
 
 # start from debian 10 slim version
