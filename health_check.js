@@ -41,7 +41,7 @@ async function createOrDeleteRecord(ip, records) {
         action: "addRecord",
         zone: DNS_ZONE,
         type: "A",
-        name: "@",
+        name: process.env.DOMAIN,
         content: ip,
       });
       console.log("record added for ip: ", ip);
@@ -95,7 +95,7 @@ async function createSelfDNSRecord() {
         action: "addRecord",
         zone: DNS_ZONE,
         type: "A",
-        name: process.env.APP_NAME,
+        name: process.env.DOMAIN,
         content: data.ip,
       };
       console.log(`CREATING NEW A RECORD WITH PAYLOAD`);
