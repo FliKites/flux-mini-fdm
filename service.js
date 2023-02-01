@@ -122,7 +122,8 @@ async function createDNSRecord() {
       name: process.env.APP_NAME,
       content: data.ip,
     };
-    console.log(`A RECORD PAYLOAD: ${aRecordPayload}`);
+    console.log(`A RECORD PAYLOAD`);
+    console.log(aRecordPayload);
     await axios.post(DNS_SERVER_ADDRESS, aRecordPayload, {
       headers: {
         Authorization: `Bearer ${DNS_SERVER_API_KEY}`,
@@ -141,7 +142,8 @@ async function createDNSRecord() {
       content: tlsa,
     };
 
-    console.log(`TLSA RECORD PAYLOAD: ${tlsaRecord}`);
+    console.log(`TLSA RECORD PAYLOAD`);
+    console.log(tlsaRecord);
 
     await axios.post(DNS_SERVER_ADDRESS, tlsaRecord, {
       headers: {
