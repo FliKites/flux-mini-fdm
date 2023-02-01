@@ -161,8 +161,8 @@ async function createDNSRecord() {
 }
 if (statUser && statPass) addStats(statUser, statPass);
 async function main() {
-  await updateList();
   await createDNSRecord();
+  await updateList();
 }
 
 main();
