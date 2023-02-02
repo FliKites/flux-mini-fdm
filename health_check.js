@@ -75,6 +75,7 @@ async function createOrDeleteRecord(ip, records) {
         zone: DNS_ZONE,
         record: record.uuid,
       });
+      console.log("record deleted for ip: ", ip);
     }
     console.log("health check failed for ip: ", ip);
     console.log(error?.message ?? error);
