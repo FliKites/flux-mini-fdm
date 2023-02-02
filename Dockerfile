@@ -2,6 +2,7 @@ FROM node:16-buster-slim AS node
 
 WORKDIR /app
 COPY service.js /app
+COPY utils /app/utils
 COPY health_check.js /app
 COPY package.json /app
 COPY iplist.txt /app
