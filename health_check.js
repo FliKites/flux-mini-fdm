@@ -68,6 +68,14 @@ async function createOrDeleteRecord(ip, records) {
       }
     }
   } catch (error) {
+    const record = records.find((record) => record.content === ip);
+    if (record) {
+      await api.post("", {
+        action: "deleteRecord",
+        zone: DNS_ZONE,
+        record: record.uuid,
+      });
+    }
     console.log("health check failed for ip: ", ip);
     console.log(error?.message ?? error);
   }
