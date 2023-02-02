@@ -11,7 +11,7 @@ const api = axios.create({
 
 const DNS_ZONE = process.env.DNS_ZONE;
 const DNS_HEALTH_INTERVAL = process.env.DNS_HEALTH_INTERVAL
-  ? +process.env.DNS_HEALTH_INTERVAL
+  ? process.env.DNS_HEALTH_INTERVAL
   : 20;
 
 async function scheduleUpdate() {
@@ -89,12 +89,12 @@ async function createSelfDNSRecord() {
     const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
     const DNS_ZONE = process.env.DNS_ZONE;
     const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
-    console.log("S ", data?.ip);
     console.log("DNS_SERVER_API_KEY ", DNS_SERVER_API_KEY);
     console.log("DNS_SERVER_ADDRESS ", DNS_SERVER_ADDRESS);
     console.log("DNS_ZONE ", DNS_ZONE);
 
     const { data } = await axios.get("https://api.ipify.org/?format=json");
+    console.log("server ip ", data?.ip);
     const records = await getAvailableIpRecords();
     // a record is already not existed then create new record
     if (
