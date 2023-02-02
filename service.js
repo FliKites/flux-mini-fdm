@@ -18,17 +18,63 @@ const checkURL = process.env.CHECK_URL || false;
 const checkStatus = process.env.CHECK_STATUS || false;
 const cmdAsync = util.promisify(nodecmd.run);
 
-async function getApplicationIP(_appName) {
+// async function getApplicationIP(_appName) {
+//   try {
+//     const fluxnodeList = await axios.get(
+//       `https://api.runonflux.io/apps/location/${_appName}`,
+//       { timeout: 13456 }
+//     );
+//     if (fluxnodeList.data.status === "success") {
+//       return fluxnodeList.data.data || [];
+//     }
+//     return [];
+//   } catch (e) {
+//     return [];
+//   }
+// }
+
+async function getApplicationIP(app_name) {
   try {
-    const fluxnodeList = await axios.get(
-      `https://api.runonflux.io/apps/location/${_appName}`,
-      { timeout: 13456 }
+    // Array of URLs
+    const fluxNodes = await getFluxNodes();
+    // Select 5 random URLs
+    const randomFluxNodes = fluxNodes
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 5);
+
+    const randomUrls = randomFluxNodes.map(
+      (ip) => `http://${ip}:16127/apps/location/${app_name}`
     );
-    if (fluxnodeList.data.status === "success") {
-      return fluxnodeList.data.data || [];
+
+    const requests = randomUrls.map((url) =>
+      axios.get(url).catch((error) => {
+        console.log(`Error while making request to ${url}: ${error}`);
+      })
+    );
+
+    const responses = await axios.all(requests).catch((error) => {
+      console.log(`Error while making concurrent requests: ${error}`);
+    });
+
+    let responseData = [];
+    for (let i = 0; i < responses.length; i++) {
+      if (responses[i] && responses[i].data) {
+        const data = responses[i].data.data;
+        responseData.push(data.map((item) => item.ip));
+      }
     }
-    return [];
-  } catch (e) {
+
+    // Find the most common IP
+    const commonIps = findMostCommonResponse(responseData).map((ip) => {
+      if (ip.includes(":")) {
+        return ip.split(":")[0];
+      }
+      return ip;
+    });
+
+    return commonIps;
+  } catch (error) {
+    console.error(error?.message ?? error);
     return [];
   }
 }
@@ -91,7 +137,7 @@ async function updateList() {
       if (checkURL && checkStatus)
         config += `    http-check expect status ${checkStatus}\n\n`;
       for (let i = 0; i < ipList.length; i += 1) {
-        const serverIP = convertIP(ipList[i].ip);
+        const serverIP = convertIP(ipList[i]);
         const serverID = `ip_${serverIP.replaceAll(".", "_")}`;
         let stikyCoockie = "";
         if (stickySession === true) stikyCoockie = `cookie ${serverID}`;
@@ -108,8 +154,4 @@ async function updateList() {
 }
 
 if (statUser && statPass) addStats(statUser, statPass);
-async function main() {
-  await updateList();
-}
-
-main();
+updateList();
