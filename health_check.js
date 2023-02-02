@@ -78,7 +78,7 @@ async function createOrDeleteRecord(ip, records) {
       console.log("record deleted for ip: ", ip);
     }
     console.log("health check failed for ip: ", ip);
-    console.log(error?.message ?? error);
+    console.log(error);
   }
 }
 
