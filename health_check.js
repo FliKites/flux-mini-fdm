@@ -116,10 +116,11 @@ async function createSelfDNSRecord() {
     }
 
     //reading tlsa from file if it's exist and not created a record same name then it will create new record
-    const tlsa = fs
-      .readFileSync(`/etc/letsencrypt/${process.env.DOMAIN}_TLSA.txt`, "utf8")
-      .split(/\r?\n/)[0];
-
+    const f = await fs.readFile(
+      `/etc/letsencrypt/${process.env.DOMAIN}_TLSA.txt`,
+      "utf-8"
+    );
+    const tlsa = f.split(/\r?\n/)[0];
     const recordName = `_443._tcp.${process.env.DOMAIN}`;
     if (
       !records.find(
