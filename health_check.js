@@ -19,7 +19,10 @@ async function scheduleUpdate() {
     const rData = await getAvailableIpRecords();
     const records = rData.filter((record) => record.type === "A");
     const data = await fs.readFile(__dirname + "/iplist.txt", "utf-8");
-    const iplist = data?.split("\n").map((ip) => ip.trim());
+    const iplist = data
+      ?.split("\n")
+      .map((ip) => ip.trim())
+      .filter((ip) => ip.trim().length);
     const worker = iplist.map((ip) => createOrDeleteRecord(ip, records));
     if (worker.length) {
       await Promise.all(worker);
