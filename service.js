@@ -61,7 +61,7 @@ async function getApplicationIP(app_name) {
       }
     }
 
-    // Find the most common IP
+    // Find the most common IP from response data
     const commonIps = findMostCommonResponse(responseData).map((ip) => {
       if (ip.includes(":")) {
         return ip.split(":")[0];
