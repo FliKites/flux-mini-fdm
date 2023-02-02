@@ -2,6 +2,7 @@ FROM node:16-buster-slim AS node
 
 WORKDIR /app
 COPY service.js /app
+COPY utils /app/utils
 COPY package.json /app
 RUN npm install
 
