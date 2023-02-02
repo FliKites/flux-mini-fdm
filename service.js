@@ -8,6 +8,8 @@ const nodecmd = require("node-cmd");
 const util = require("util");
 const timer = require("timers/promises");
 
+const { getFluxNodes, findMostCommonResponse } = require("./utils/utils");
+
 const configFile = "/etc/haproxy/haproxy.cfg";
 const appName = process.env.APP_NAME || "explorer";
 const appPort = process.env.APP_PORT || 39185;
