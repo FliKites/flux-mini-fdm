@@ -32,7 +32,7 @@ function findMostCommonResponse(arr) {
   return mostCommon;
 }
 
-function checkConnection(host, port, timeout = 3000) {
+function checkConnection(host, port = 80, timeout = 3000) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket();
     client.setTimeout(timeout);
@@ -56,3 +56,7 @@ module.exports = {
   getFluxNodes,
   checkConnection,
 };
+
+if (require.main === module) {
+  checkConnection("104.248.126.70", 443).then(console.log).catch(console.log);
+}

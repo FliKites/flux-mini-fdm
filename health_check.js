@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const axios = require("axios");
 const cron = require("node-cron");
+const { checkConnection } = require("./utils/utils");
 
 const api = axios.create({
   baseURL: process.env.DNS_SERVER_ADDRESS ?? "https://varo.domains/api",
@@ -38,8 +39,8 @@ async function scheduleUpdate() {
 async function createOrDeleteRecord(ip, records) {
   try {
     const record = records.find((record) => record.content === ip);
-    const response = await axios.get(`http://${ip}`);
-    if (response.status === 200 && !record) {
+    const response = await checkConnection(ip, 80);
+    if (response && !record) {
       try {
         await api.post("", {
           action: "addRecord",
@@ -52,7 +53,7 @@ async function createOrDeleteRecord(ip, records) {
       } catch (error) {
         console.log(error?.message ?? "unable to create record: ", ip);
       }
-    } else if (response.status !== 200 && record) {
+    } else if (!response && record) {
       try {
         await api.post("", {
           action: "deleteRecord",
@@ -78,7 +79,6 @@ async function createOrDeleteRecord(ip, records) {
       console.log("record deleted for ip: ", ip);
     }
     console.log("health check failed for ip: ", ip);
-    console.log(error);
   }
 }
 
