@@ -5,7 +5,7 @@ async function getFluxNodes() {
   try {
     const data = await fs.readFile(__dirname + "/ips.txt", "utf8");
     const lines = data.split("\n");
-    return lines.map((ip) => ip.trim());
+    return lines.filter((ip) => ip.trim().length).map((ip) => ip.trim());
   } catch (err) {
     console.log(err);
     return [];
