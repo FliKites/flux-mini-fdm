@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
 if [ -n "$DOMAIN" ]; then
-    if [ "$CERT" = "none" ]; then
-        mkdir -p /etc/haproxy/certs
+    if [ "$CERT" = "manual" ]; then
+       mkdir -p /etc/letsencrypt/live && mkdir -p /etc/haproxy/certs && cat /etc/letsencrypt/live/"$DOMAIN".key \
+              /etc/letsencrypt/live/"$DOMAIN".crt \
+              | tee /etc/haproxy/certs/haproxy-"$DOMAIN".pem >/dev/null
+              echo "Generated below is the TLSA DNS record - Use With Handshake Domains or DNSSEC | Record Name: _443._tcp.$DOMAIN"
+openssl x509 -in /etc/letsencrypt/live/cert.crt -outform DER | openssl sha256 | sed 's/(stdin)=//' | awk '{print "3 0 1",$1}'
+              echo "Self-signed certificate manually loaded and stored in /etc/haproxy/certs/"
     elif [ "$CERT" = "self" ]; then
-     mkdir -p /etc/letsencrypt/live  && mkdir -p /etc/haproxy/certs && 
+     mkdir -p /etc/letsencrypt/live && mkdir -p /etc/haproxy/certs && 
 openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
   -keyout /etc/letsencrypt/live/cert.key -out /etc/letsencrypt/live/cert.crt -extensions ext  -config \
   <(echo "[req]";
