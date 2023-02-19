@@ -4,7 +4,7 @@ const cron = require("node-cron");
 const { checkConnection } = require("./utils/utils");
 
 const api = axios.create({
-  baseURL: process.env.DNS_SERVER_ADDRESS ?? "https://varo.domains/api",
+  baseURL: process.env.DNS_SERVER_ADDRESS,
   headers: {
     Authorization: `Bearer ${process.env.DNS_SERVER_API_KEY}`,
   },
@@ -42,12 +42,11 @@ async function createOrDeleteRecord(ip, records) {
     const response = await checkConnection(ip, 80);
     if (response && !record) {
       try {
-        await api.post("", {
-          action: "addRecord",
-          zone: DNS_ZONE,
+        await api.post(`/zones/${DNS_ZONE}/dns_records`, {
           type: "A",
           name: process.env.DOMAIN,
           content: ip,
+          ttl: 3600,
         });
         console.log("record added for ip: ", ip);
       } catch (error) {
@@ -55,11 +54,7 @@ async function createOrDeleteRecord(ip, records) {
       }
     } else if (!response && record) {
       try {
-        await api.post("", {
-          action: "deleteRecord",
-          zone: DNS_ZONE,
-          record: record.uuid,
-        });
+        await api.delete(`/zones/${DNS_ZONE}/dns_records/${record.id}`);
         console.log("record deleted for ip: ", ip);
       } catch (error) {
         console.log(
@@ -71,11 +66,7 @@ async function createOrDeleteRecord(ip, records) {
   } catch (error) {
     const record = records.find((record) => record.content === ip);
     if (record) {
-      await api.post("", {
-        action: "deleteRecord",
-        zone: DNS_ZONE,
-        record: record.uuid,
-      });
+      await api.delete(`/zones/${DNS_ZONE}/dns_records/${record.id}`);
       console.log("record deleted for ip: ", ip);
     }
     console.log("health check failed for ip: ", ip);
@@ -84,11 +75,8 @@ async function createOrDeleteRecord(ip, records) {
 
 async function getAvailableIpRecords() {
   try {
-    const { data } = await api.post("", {
-      action: "getRecords",
-      zone: DNS_ZONE,
-    });
-    return data?.data ?? [];
+    const { data } = await api.get(`/zones/${DNS_ZONE}/dns_records`);
+    return data?.result ?? [];
   } catch (error) {
     console.log("unable to get dns records");
     console.log(error?.message);
@@ -115,15 +103,14 @@ async function createSelfDNSRecord() {
       )
     ) {
       const aRecordPayload = {
-        action: "addRecord",
-        zone: DNS_ZONE,
         type: "A",
         name: process.env.DOMAIN,
         content: data.ip,
+        ttl: 3600,
       };
       console.log(`CREATING NEW A RECORD WITH PAYLOAD`);
       console.log(aRecordPayload);
-      await api.post("", aRecordPayload);
+      await api.post(`/zones/${DNS_ZONE}/dns_records`, aRecordPayload);
       console.log("A RECORD SUCCESSFULLY CREATED WITH IP: ", data?.ip);
     }
 
@@ -141,17 +128,16 @@ async function createSelfDNSRecord() {
       tlsa?.trim()
     ) {
       const tlsaRecord = {
-        action: "addRecord",
-        zone: DNS_ZONE,
         type: "TLSA",
         name: recordName,
         content: tlsa,
+        ttl: 3600,
       };
 
       console.log(`TLSA RECORD PAYLOAD`);
       console.log(tlsaRecord);
 
-      await api.post("", tlsaRecord);
+      await api.post(`/zones/${DNS_ZONE}/dns_records`, tlsaRecord);
       console.log("TLSA RECORD SUCCESS WITH TLSA: ", tlsa);
     } else {
       console.log(
