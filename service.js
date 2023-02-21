@@ -155,5 +155,17 @@ async function updateList() {
   }
 }
 
-if (statUser && statPass) addStats(statUser, statPass);
-updateList();
+if (process.env?.STARTUP_DELAY) {
+  let delay = +process.env?.STARTUP_DELAY * 60 * 1000;
+  console.log(
+    `service will be executed after: ${process.env?.STARTUP_DELAY}min`
+  );
+  setTimeout(() => {
+    console.log(`service executing`);
+    if (statUser && statPass) addStats(statUser, statPass);
+    updateList();
+  }, delay);
+} else {
+  if (statUser && statPass) addStats(statUser, statPass);
+  updateList();
+}
