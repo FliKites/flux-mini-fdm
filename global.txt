@@ -1,0 +1,63 @@
+global
+    # log to sidecar rsyslog container
+    # with syslog facility to accomplish rsyslog-alpine cfg
+    # log rsyslog syslog
+
+    maxconn 20480
+    ############# IMPORTANT #################################
+    ## DO NOT SET CHROOT OTHERWISE YOU HAVE TO CHANGE THE  ##
+    ## acme-http01-webroot.lua file                        ##
+    # chroot /jail                                         ##
+    #########################################################
+    lua-load /etc/haproxy/acme-http01-webroot.lua
+    #
+    # SSL options
+    ssl-default-bind-ciphers AES256+EECDH:AES256+EDH:!aNULL;
+    tune.ssl.default-dh-param 4096
+
+    # workaround for bug #14 (Cert renewal blocks HAProxy indefinitely with Websocket connections)
+    hard-stop-after 3s
+
+# DNS runt-time resolution on backend hosts
+resolvers docker
+    nameserver dns "127.0.0.11:53"
+
+defaults
+    #log global
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option forwardfor
+    option http-server-close
+    #option httplog
+
+    # never fail on address resolution
+    default-server init-addr last,libc,none
+
+# [STATS]
+
+frontend http
+    bind *:80
+    mode http
+    acl url_acme_http01 path_beg /.well-known/acme-challenge/
+    http-request use-service lua.acme-http01 if METH_GET url_acme_http01
+    redirect scheme https code 301 if !{ ssl_fc }
+
+frontend https
+    bind *:443 ssl crt /etc/haproxy/certs/ no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11 alpn h3,h2,http/1.1
+    http-response set-header Strict-Transport-Security "max-age=16000000; includeSubDomains; preload;"
+    default_backend www
+
+backend www
+    # www is the name of the container HTTP
+    balance roundrobin
+    http-request set-header X-Forwarded-Proto https
+    # http-request set-header Host yourhost.domain
+
+    ################### IMPORTANT ##################################################
+    # [SERVERS] DO NOT REMOVE OR EDIT THIS LINE, DO NOT ADD COMMANDS AFTER THIS LINE
+    server ip_31_209_58_143 31.209.58.143:35860 check
+    server ip_91_134_187_66 91.134.187.66:35860 check
+    server ip_66_119_15_25 66.119.15.25:35860 check
+    server ip_65_108_197_159 65.108.197.159:35860 check

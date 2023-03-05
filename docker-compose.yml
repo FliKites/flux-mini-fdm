@@ -3,10 +3,10 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: test.Dockerfile
     env_file:
       - .env
     ports:
-      - "80:80"
-      - "443:443"
+      - "81:80"
+      - "447:443"
     restart: always
