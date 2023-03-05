@@ -138,6 +138,7 @@ async function updateList() {
         appDomain,
         "nginx-" + appDomain
       );
+      console.log("working before reload");
       await cmdAsync("supervisorctl signal USR1 nginx");
     } catch (err) {
       console.log(err);
@@ -161,7 +162,7 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
       /ssl_certificate_key\s+.*?;/g,
       `ssl_certificate_key /etc/nginx/certs/${certName}.key;`
     );
-
+  console.log("servers ", servers);
   // Replace #[SERVERS] placeholder
   const finalConf = newConf.replace(
     /#\[(SERVERS)\]/g,
