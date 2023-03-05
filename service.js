@@ -155,7 +155,11 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
     .replace(/server_name\s+.*?;/g, `server_name ${serverName};`)
     .replace(
       /ssl_certificate\s+.*?;/g,
-      `ssl_certificate /etc/nginx/certs/${certName}.pem;`
+      `ssl_certificate /etc/nginx/certs/${certName}.crt;`
+    )
+    .replace(
+      /ssl_certificate_key\s+.*?;/g,
+      `ssl_certificate_key /etc/nginx/certs/${certName}.key;`
     );
 
   // Replace #[SERVERS] placeholder

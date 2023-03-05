@@ -6,7 +6,7 @@ if [ -n "$DOMAIN" ]; then
     elif [ "$CERT" = "self" ]; then
      mkdir -p /etc/letsencrypt/live  && mkdir -p /etc/nginx/certs && 
     openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
-  -keyout /etc/letsencrypt/live/cert.key -out /etc/letsencrypt/live/cert.crt -extensions ext  -config \
+  -keyout /etc/letsencrypt/live/nginx-"$DOMAIN".key -out /etc/letsencrypt/live/nginx-"$DOMAIN".crt -extensions ext  -config \
   <(echo "[req]";
     echo distinguished_name=req;
     echo "[ext]";
@@ -14,13 +14,13 @@ if [ -n "$DOMAIN" ]; then
     echo "extendedKeyUsage=serverAuth";
     echo "basicConstraints=critical,CA:FALSE";
     echo "subjectAltName=DNS:$DOMAIN";
-    ) -subj "/CN=$DOMAIN" && cat /etc/letsencrypt/live/cert.key \
-              /etc/letsencrypt/live/cert.crt \
+    ) -subj "/CN=$DOMAIN" && cat /etc/letsencrypt/live/nginx-"$DOMAIN".key \
+              /etc/letsencrypt/live/nginx-"$DOMAIN".crt \
               | tee /etc/nginx/certs/nginx-"$DOMAIN".pem >/dev/null
 
         echo "Self-signed certificate generated and stored in /etc/nginx/certs/"
         echo "Generated below is the TLSA DNS record - Use With Handshake Domains or DNSSEC | Record Name: _443._tcp.$DOMAIN"
-        TLSA=$(openssl x509 -in /etc/letsencrypt/live/cert.crt -outform DER | openssl sha256 | sed 's/(stdin)=//' | awk '{print "3 0 1",$1}')
+        TLSA=$(openssl x509 -in /etc/letsencrypt/live/nginx-"$DOMAIN".crt -outform DER | openssl sha256 | sed 's/(stdin)=//' | awk '{print "3 0 1",$1}')
         echo $TLSA > /etc/letsencrypt/"$DOMAIN"_TLSA.txt
         echo $TLSA
     elif [ "$STAGING" = true ]; then
@@ -69,5 +69,6 @@ if [ -n "$DOMAIN" ]; then
         done
     fi
 fi
+cp /etc/letsencrypt/live/* /etc/nginx/certs/
 
 exit 0
