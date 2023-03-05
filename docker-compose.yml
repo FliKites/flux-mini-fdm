@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: test.Dockerfile
+      dockerfile: Dockerfile
     env_file:
       - .env
     ports:
