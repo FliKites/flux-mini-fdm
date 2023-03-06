@@ -165,8 +165,8 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
   console.log("servers ", servers);
   // Replace #[SERVERS] placeholder
   const finalConf = newConf.replace(
-    /#\[(SERVERS)\]/g,
-    `server ${servers.join(";\n    server ")};`
+    /upstream backend {[\s\S]*?}/,
+    `upstream backend { server ${servers.join(";\nserver ")}; }`
   );
 
   fs.writeFileSync(configFile, finalConf);
