@@ -7,6 +7,7 @@ const fs = require("fs");
 const nodecmd = require("node-cmd");
 const util = require("util");
 const timer = require("timers/promises");
+const { exec } = require("child_process");
 
 const {
   getFluxNodes,
@@ -19,6 +20,7 @@ const appName = process.env.APP_NAME || "explorer";
 const appPort = process.env.APP_PORT || 39185;
 const appDomain = process.env.DOMAIN || "";
 const cmdAsync = util.promisify(nodecmd.run);
+const executeScript = util.promisify(exec);
 
 async function getApplicationIP(app_name) {
   try {
@@ -128,7 +130,7 @@ async function startUP() {
       let count = 0;
       while (!fs.existsSync(filePath) && count < 5) {
         count++;
-        await cmdAsync(certScript);
+        await executeScript(certScript);
         console.log("retrying certs " + count);
         if (fs.existsSync(filePath)) {
           updateList();
