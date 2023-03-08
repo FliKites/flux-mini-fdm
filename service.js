@@ -89,7 +89,7 @@ async function updateList() {
         "nginx-" + appDomain
       );
       console.log("working before reload");
-      await cmdAsync("supervisorctl signal USR1 nginx");
+      await cmdAsync("service nginx start && nginx -s reload");
     } catch (err) {
       console.log(err);
     }
