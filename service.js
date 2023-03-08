@@ -22,14 +22,32 @@ const appDomain = process.env.DOMAIN || "";
 const cmdAsync = util.promisify(nodecmd.run);
 const executeScript = util.promisify(exec);
 
+async function getWorkingNodes() {
+  const fluxNodes = await getFluxNodes();
+  const activeIps = [];
+  for (const ip of fluxNodes) {
+    try {
+      await checkConnection(ip, 16127);
+      activeIps.push(ip);
+      if (activeIps.length >= 5) {
+        return activeIps;
+      }
+    } catch (error) {
+      console.log(`avoiding bad flux node ${ip} err: ${error?.message}`);
+    }
+  }
+  return activeIps;
+}
+
 async function getApplicationIP(app_name) {
   try {
     // Select 5 random URLs
-    const fluxNodes = await getFluxNodes();
+    // const fluxNodes = await getFluxNodes();
 
-    const randomFluxNodes = fluxNodes
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 5);
+    // const randomFluxNodes = fluxNodes
+    //   .sort(() => 0.5 - Math.random())
+    //   .slice(0, 5);
+    const randomFluxNodes = await getWorkingNodes();
 
     const randomUrls = randomFluxNodes.map(
       (ip) => `http://${ip}:16127/apps/location/${app_name}`
