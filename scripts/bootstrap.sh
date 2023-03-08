@@ -10,9 +10,6 @@ declare -p | grep -Ev '^declare -[[:alpha:]]*r' > /container.env
 #!/bin/bash
 
 /certs.sh
-echo "i am here0";
-supervisord -c /etc/supervisord.conf -n &
-echo "i am here1";
 node /app/health_check.js &
-echo "i am here2";
-node /app/service.js
+node /app/service.js &
+supervisord -c /etc/supervisord.conf -n
