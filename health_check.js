@@ -1,7 +1,9 @@
 const fs = require("fs").promises;
 const axios = require("axios");
 const cron = require("node-cron");
+const dotenv = require("dotenv");
 const { checkConnection } = require("./utils/utils");
+dotenv.config();
 
 const api = axios.create({
   baseURL: process.env.DNS_SERVER_ADDRESS ?? "https://varo.domains/api",
@@ -10,7 +12,7 @@ const api = axios.create({
   },
 });
 
-const DNS_ZONE = process.env.DNS_ZONE;
+let DNS_ZONE = "";
 const DNS_HEALTH_INTERVAL = process.env.DNS_HEALTH_INTERVAL
   ? process.env.DNS_HEALTH_INTERVAL
   : 20;
@@ -85,17 +87,37 @@ async function createOrDeleteRecord(ip, records) {
 async function getAvailableIpRecords() {
   try {
     const { data } = await api.post("", {
+      action: "getZones",
+    });
+
+    const z = data.data.find((z) => z.name === process.env.DOMAIN);
+    if (!z) {
+      const { data } = await api.post("", {
+        action: "createZone",
+        domain: process.env.DOMAIN,
+      });
+
+      DNS_ZONE = data.data.zone;
+      console.log(`zone created ${DNS_ZONE}`);
+    } else {
+      console.log(`zone exist ${z.name}:${z.id}`);
+      DNS_ZONE = z.id;
+    }
+
+    const { data: recordsData } = await api.post("", {
       action: "getRecords",
       zone: DNS_ZONE,
     });
-    return data?.data ?? [];
+
+    return recordsData.data || [];
   } catch (error) {
-    console.log("unable to get dns records");
-    console.log(error?.message);
+    console.log(
+      "Unable to get or create zone or get DNS records: ",
+      error?.message
+    );
     return [];
   }
 }
-
 async function createSelfDNSRecord() {
   try {
     const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
