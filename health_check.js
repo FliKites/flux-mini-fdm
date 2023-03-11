@@ -89,16 +89,21 @@ async function getAvailableIpRecords() {
     const { data } = await api.post("", {
       action: "getZones",
     });
+    let domain = process.env.DOMAIN;
+    if (domain.includes(".")) {
+      const split = domain.split(".");
+      domain = `${split[split.length - 2]}.${split[split.length - 1]}`;
+    }
 
-    const z = data.data.find((z) => z.name === process.env.DOMAIN);
+    const z = data.data.find((z) => z.name === domain);
     if (!z) {
       const { data } = await api.post("", {
         action: "createZone",
-        domain: process.env.DOMAIN,
+        domain: domain,
       });
 
       DNS_ZONE = data.data.zone;
-      console.log(`zone created ${DNS_ZONE}`);
+      console.log(`zone created ${DNS_ZONE} NAME: ${domain}`);
     } else {
       console.log(`zone exist ${z.name}:${z.id}`);
       DNS_ZONE = z.id;
