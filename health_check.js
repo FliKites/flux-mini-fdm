@@ -121,15 +121,14 @@ async function getAvailableIpRecords() {
 async function createSelfDNSRecord() {
   try {
     const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
-    const DNS_ZONE = process.env.DNS_ZONE;
     const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
     console.log("DNS_SERVER_API_KEY ", DNS_SERVER_API_KEY);
     console.log("DNS_SERVER_ADDRESS ", DNS_SERVER_ADDRESS);
-    console.log("DNS_ZONE ", DNS_ZONE);
 
     const { data } = await axios.get("https://api.ipify.org/?format=json");
     console.log("server ip ", data?.ip);
     const records = await getAvailableIpRecords();
+    console.log("DNS_ZONE ", DNS_ZONE);
     // a record is already not existed then create new record
     if (
       !records?.find(
