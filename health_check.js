@@ -40,7 +40,15 @@ async function scheduleUpdate() {
 
 async function createOrDeleteRecord(ip, records) {
   try {
-    const record = records.find((record) => record.content === ip);
+    if (!DNS_ZONE) {
+      console.log(
+        "[createOrDeleteRecord] unable retrive DNS_ZONE, please check the the API KEY"
+      );
+      return;
+    }
+    const record = records.find(
+      (record) => record.content === ip && record.name === process.env.DOMAIN
+    );
     const response = await checkConnection(ip, 80);
     if (response && !record) {
       try {
@@ -71,7 +79,9 @@ async function createOrDeleteRecord(ip, records) {
       }
     }
   } catch (error) {
-    const record = records.find((record) => record.content === ip);
+    const record = records.find(
+      (record) => record.content === ip && record.name === process.env.DOMAIN
+    );
     if (record) {
       await api.post("", {
         action: "deleteRecord",
@@ -94,7 +104,7 @@ async function getAvailableIpRecords() {
       const split = domain.split(".");
       domain = `${split[split.length - 2]}.${split[split.length - 1]}`;
     }
-
+    console.log("data ", data);
     const z = data.data.find((z) => z.name === domain);
     if (!z) {
       const { data } = await api.post("", {
@@ -134,10 +144,19 @@ async function createSelfDNSRecord() {
     console.log("server ip ", data?.ip);
     const records = await getAvailableIpRecords();
     console.log("DNS_ZONE ", DNS_ZONE);
+    if (!DNS_ZONE) {
+      console.log(
+        "[createSelfDNSRecord] unable retrive DNS_ZONE, please check the the API KEY"
+      );
+      return;
+    }
     // a record is already not existed then create new record
     if (
       !records?.find(
-        (record) => record.content === data?.ip && record.type === "A"
+        (record) =>
+          record.content === data?.ip &&
+          record.name === process.env.DOMAIN &&
+          record.type === "A"
       )
     ) {
       const aRecordPayload = {
