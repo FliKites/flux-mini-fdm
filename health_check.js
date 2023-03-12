@@ -1,16 +1,19 @@
 const fs = require("fs").promises;
 const axios = require("axios");
 const cron = require("node-cron");
+const dotenv = require("dotenv");
+dotenv.config();
 const { checkConnection } = require("./utils/utils");
 
 const api = axios.create({
   baseURL: process.env.DNS_SERVER_ADDRESS,
   headers: {
     Authorization: `Bearer ${process.env.DNS_SERVER_API_KEY}`,
+    "Content-Type": "application/json",
   },
 });
 
-const DNS_ZONE = process.env.DNS_ZONE;
+let DNS_ZONE = "";
 const DNS_HEALTH_INTERVAL = process.env.DNS_HEALTH_INTERVAL
   ? process.env.DNS_HEALTH_INTERVAL
   : 20;
@@ -38,7 +41,9 @@ async function scheduleUpdate() {
 
 async function createOrDeleteRecord(ip, records) {
   try {
-    const record = records.find((record) => record.content === ip);
+    const record = records.find(
+      (record) => record.content === ip && record.name === process.env.DOMAIN
+    );
     const response = await checkConnection(ip, 80);
     if (response && !record) {
       try {
@@ -64,7 +69,9 @@ async function createOrDeleteRecord(ip, records) {
       }
     }
   } catch (error) {
-    const record = records.find((record) => record.content === ip);
+    const record = records.find(
+      (record) => record.content === ip && record.name === process.env.DOMAIN
+    );
     if (record) {
       await api.delete(`/zones/${DNS_ZONE}/dns_records/${record.id}`);
       console.log("record deleted for ip: ", ip);
@@ -75,6 +82,27 @@ async function createOrDeleteRecord(ip, records) {
 
 async function getAvailableIpRecords() {
   try {
+    let domain_name = process.env.DOMAIN;
+    if (domain_name.includes(".")) {
+      const split = domain_name.split(".");
+      domain_name = `${split[split.length - 2]}.${split[split.length - 1]}`;
+    }
+
+    const { data: zoneData } = await api.get(
+      `/zones?account.id=${process.env.DNS_SERVER_ACCOUNT_ID}&name=${domain_name}`
+    );
+    if (!zoneData?.result?.length) {
+      const input = {
+        account: { id: process.env.DNS_SERVER_ACCOUNT_ID },
+        name: domain_name,
+        type: "full",
+      };
+      const { data: newZoneData } = await api.post("/zones", input);
+      DNS_ZONE = newZoneData.result.id;
+    } else {
+      DNS_ZONE = zoneData?.result[0].id;
+    }
+
     const { data } = await api.get(`/zones/${DNS_ZONE}/dns_records`);
     return data?.result ?? [];
   } catch (error) {
@@ -87,19 +115,21 @@ async function getAvailableIpRecords() {
 async function createSelfDNSRecord() {
   try {
     const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
-    const DNS_ZONE = process.env.DNS_ZONE;
     const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
     console.log("DNS_SERVER_API_KEY ", DNS_SERVER_API_KEY);
     console.log("DNS_SERVER_ADDRESS ", DNS_SERVER_ADDRESS);
-    console.log("DNS_ZONE ", DNS_ZONE);
 
     const { data } = await axios.get("https://api.ipify.org/?format=json");
     console.log("server ip ", data?.ip);
     const records = await getAvailableIpRecords();
+    console.log("DNS_ZONE ", DNS_ZONE);
     // a record is already not existed then create new record
     if (
       !records?.find(
-        (record) => record.content === data?.ip && record.type === "A"
+        (record) =>
+          record.content === data?.ip &&
+          record.name === process.env.DOMAIN &&
+          record.type === "A"
       )
     ) {
       const aRecordPayload = {
