@@ -8,7 +8,11 @@ const nodecmd = require("node-cmd");
 const util = require("util");
 const timer = require("timers/promises");
 
-const { getFluxNodes, findMostCommonResponse } = require("./utils/utils");
+const {
+  getFluxNodes,
+  findMostCommonResponse,
+  checkConnection,
+} = require("./utils/utils");
 
 const configFile = "/etc/haproxy/haproxy.cfg";
 const appName = process.env.APP_NAME || "explorer";
@@ -20,30 +24,32 @@ const checkURL = process.env.CHECK_URL || false;
 const checkStatus = process.env.CHECK_STATUS || false;
 const cmdAsync = util.promisify(nodecmd.run);
 
-// async function getApplicationIP(_appName) {
-//   try {
-//     const fluxnodeList = await axios.get(
-//       `https://api.runonflux.io/apps/location/${_appName}`,
-//       { timeout: 13456 }
-//     );
-//     if (fluxnodeList.data.status === "success") {
-//       return fluxnodeList.data.data || [];
-//     }
-//     return [];
-//   } catch (e) {
-//     return [];
-//   }
-// }
+async function getWorkingNodes() {
+  const fluxNodes = await getFluxNodes();
+  const activeIps = [];
+  for (const ip of fluxNodes) {
+    try {
+      await checkConnection(ip, 16127);
+      activeIps.push(ip);
+      if (activeIps.length >= 5) {
+        return activeIps;
+      }
+    } catch (error) {
+      console.log(`avoiding bad flux node ${ip} err: ${error?.message}`);
+    }
+  }
+  return activeIps;
+}
 
 async function getApplicationIP(app_name) {
   try {
     // Array of URLs
-    const fluxNodes = await getFluxNodes();
+    // const fluxNodes = await getFluxNodes();
     // Select 5 random URLs
-    const randomFluxNodes = fluxNodes
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 5);
-
+    // const randomFluxNodes = fluxNodes
+    //   .sort(() => 0.5 - Math.random())
+    //   .slice(0, 5);
+    const randomFluxNodes = await getWorkingNodes();
     const randomUrls = randomFluxNodes.map(
       (ip) => `http://${ip}:16127/apps/location/${app_name}`
     );
