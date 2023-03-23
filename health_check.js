@@ -99,11 +99,7 @@ async function getAvailableIpRecords() {
     const { data } = await api.post("", {
       action: "getZones",
     });
-    let domain = process.env.DOMAIN;
-    if (domain.includes(".")) {
-      const split = domain.split(".");
-      domain = `${split[split.length - 2]}.${split[split.length - 1]}`;
-    }
+    let domain = getDomain(process.env.DOMAIN);
     console.log("data ", data);
     const z = data.data.find((z) => z.name === domain);
     if (!z) {
@@ -206,6 +202,87 @@ async function createSelfDNSRecord() {
     }
   } catch (error) {
     console.log(error?.message ?? "unable to update dns records");
+  }
+}
+
+function getDomain(domain) {
+  const commonTlds = [
+    ".com",
+    ".org",
+    ".net",
+    ".edu",
+    ".gov",
+    ".mil",
+    ".biz",
+    ".info",
+    ".mobi",
+    ".name",
+    ".pro",
+    ".aero",
+    ".asia",
+    ".cat",
+    ".coop",
+    ".jobs",
+    ".museum",
+    ".travel",
+    ".arpa",
+    ".int",
+    ".post",
+    ".tel",
+    ".xxx",
+    ".ac",
+    ".ad",
+    ".ae",
+    ".af",
+    ".ag",
+    ".ai",
+    ".al",
+    ".am",
+    ".ao",
+    ".aq",
+    ".ar",
+    ".as",
+    ".at",
+    ".au",
+    ".aw",
+    ".ax",
+    ".az",
+    ".ba",
+    ".bb",
+    ".bd",
+    ".be",
+    ".bf",
+    ".bg",
+    ".bh",
+    ".bi",
+    ".bj",
+    ".bm",
+    ".bn",
+    ".bo",
+    ".br",
+    ".bs",
+    ".bt",
+    ".bv",
+    ".bw",
+    ".by",
+    ".bz",
+    ".ca",
+    ".cc",
+    ".cd",
+  ];
+  let parts = domain.split(".");
+  let tld = parts.pop();
+  let tld_d = tld;
+  tld = "." + tld;
+  if (commonTlds.includes(tld)) {
+    let secondLvlDomain = parts.pop();
+    if (secondLvlDomain) {
+      return secondLvlDomain + tld;
+    } else {
+      return domain;
+    }
+  } else {
+    return tld_d;
   }
 }
 
