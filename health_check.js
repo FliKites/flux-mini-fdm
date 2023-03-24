@@ -99,7 +99,7 @@ async function getAvailableIpRecords() {
     const { data } = await api.post("", {
       action: "getZones",
     });
-    let domain = getDomain(process.env.DOMAIN);
+    let domain = await getDomain(process.env.DOMAIN);
     console.log("data ", data);
     const z = data.data.find((z) => z.name === domain);
     if (!z) {
@@ -205,71 +205,13 @@ async function createSelfDNSRecord() {
   }
 }
 
-function getDomain(domain) {
-  const commonTlds = [
-    ".com",
-    ".org",
-    ".net",
-    ".edu",
-    ".gov",
-    ".mil",
-    ".biz",
-    ".info",
-    ".mobi",
-    ".name",
-    ".pro",
-    ".aero",
-    ".asia",
-    ".cat",
-    ".coop",
-    ".jobs",
-    ".museum",
-    ".travel",
-    ".arpa",
-    ".int",
-    ".post",
-    ".tel",
-    ".xxx",
-    ".ac",
-    ".ad",
-    ".ae",
-    ".af",
-    ".ag",
-    ".ai",
-    ".al",
-    ".am",
-    ".ao",
-    ".aq",
-    ".ar",
-    ".as",
-    ".at",
-    ".au",
-    ".aw",
-    ".ax",
-    ".az",
-    ".ba",
-    ".bb",
-    ".bd",
-    ".be",
-    ".bf",
-    ".bg",
-    ".bh",
-    ".bi",
-    ".bj",
-    ".bm",
-    ".bn",
-    ".bo",
-    ".br",
-    ".bs",
-    ".bt",
-    ".bv",
-    ".bw",
-    ".by",
-    ".bz",
-    ".ca",
-    ".cc",
-    ".cd",
-  ];
+async function getDomain(domain) {
+  const data = await fs.readFile(__dirname + "/tlds.txt", "utf8");
+  const lines = data.split("\n");
+
+  const commonTlds = lines
+    .filter((ip) => ip.trim().length)
+    .map((ip) => "." + ip.trim());
   let parts = domain.split(".");
   let tld = parts.pop();
   let tld_d = tld;
