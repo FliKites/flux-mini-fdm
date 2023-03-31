@@ -218,11 +218,7 @@ async function getDomain(domain) {
   tld = "." + tld;
   if (commonTlds.includes(tld)) {
     let secondLvlDomain = parts.pop();
-    if (secondLvlDomain) {
-      return secondLvlDomain + tld;
-    } else {
-      return domain;
-    }
+    return secondLvlDomain ? secondLvlDomain + tld : domain;
   } else {
     return tld_d;
   }
@@ -239,4 +235,5 @@ if (require.main === module) {
   cron.schedule(`*/${DNS_HEALTH_INTERVAL} * * * *`, () => {
     scheduleUpdate();
   });
+  // getDomain("nostr.hssl").then(console.log);
 }
