@@ -6,6 +6,7 @@ COPY utils /app/utils
 COPY health_check.js /app
 COPY package.json /app
 COPY iplist.txt /app
+COPY tlds.txt /app
 RUN npm install
 
 # start from debian 10 slim version
