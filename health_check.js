@@ -235,5 +235,5 @@ if (require.main === module) {
   cron.schedule(`*/${DNS_HEALTH_INTERVAL} * * * *`, () => {
     scheduleUpdate();
   });
-  getDomain(process.env.DOMAIN).then(console.log);
+  // getDomain(process.env.DOMAIN).then(console.log);
 }
