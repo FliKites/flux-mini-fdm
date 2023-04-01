@@ -211,12 +211,12 @@ async function getDomain(domain) {
 
   const commonTlds = lines
     .filter((ip) => ip.trim().length)
-    .map((ip) => "." + ip.trim());
+    .map((ip) => "." + ip.trim().toLowerCase());
   let parts = domain.split(".");
   let tld = parts.pop();
   let tld_d = tld;
   tld = "." + tld;
-  if (commonTlds.includes(tld)) {
+  if (commonTlds.includes(tld.toLowerCase())) {
     let secondLvlDomain = parts.pop();
     return secondLvlDomain ? secondLvlDomain + tld : domain;
   } else {
@@ -235,5 +235,5 @@ if (require.main === module) {
   cron.schedule(`*/${DNS_HEALTH_INTERVAL} * * * *`, () => {
     scheduleUpdate();
   });
-  // getDomain("nostr.hssl").then(console.log);
+  getDomain(process.env.DOMAIN).then(console.log);
 }
