@@ -155,7 +155,7 @@ async function startUP() {
           break;
         }
         await timer.setTimeout(
-          1000 * (process.env?.RETRY_DELAY ? +process.env?.RETRY_DELAY : 60)
+          1000 * (process.env?.CERT_RETRY_DELAY ? +process.env?.CERT_RETRY_DELAY : 60)
         );
       }
     } else {
