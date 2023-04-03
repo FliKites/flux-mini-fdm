@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -n "$DOMAIN" ]; then
-    if [ "$CERT" = "none" ]; then
+    if [ "$CERT" = none ]; then
         mkdir -p /etc/nginx/certs
     elif [ "$CERT" = self ] && [ -z "$(ls -A /etc/nginx/certs)" ]; then
      mkdir -p /etc/letsencrypt/live/"$DOMAIN"  && mkdir -p /etc/nginx/certs &&
