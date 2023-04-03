@@ -3,7 +3,7 @@
 if [ -n "$DOMAIN" ]; then
     if [ "$CERT" = "none" ]; then
         mkdir -p /etc/nginx/certs
-    elif [ "$CERT" = "self" ] && [ -z "$(ls -A /etc/nginx/certs)" ]; then
+    elif [ "$CERT" = self ] && [ -z "$(ls -A /etc/nginx/certs)" ]; then
      mkdir -p /etc/letsencrypt/live/"$DOMAIN"  && mkdir -p /etc/nginx/certs &&
     openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
   -keyout /etc/letsencrypt/live/"$DOMAIN"/nginx-"$DOMAIN".key -out /etc/letsencrypt/live/"$DOMAIN"/nginx-"$DOMAIN".crt -extensions ext  -config \
