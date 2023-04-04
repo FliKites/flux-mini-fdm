@@ -13,8 +13,8 @@ const api = axios.create({
 });
 
 let DNS_ZONE = "";
-const DNS_HEALTH_INTERVAL = process.env.DNS_HEALTH_INTERVAL
-  ? process.env.DNS_HEALTH_INTERVAL
+const DNS_HEALTH_INTERVAL = process.env.FRONTEND_HEALTH_INTERVAL
+  ? process.env.FRONTEND_HEALTH_INTERVAL
   : 20;
 
 async function scheduleUpdate() {
@@ -196,12 +196,12 @@ async function createSelfDNSRecord() {
       console.log("TLSA RECORD SUCCESS WITH TLSA: ", tlsa);
     } else {
       console.log(
-        "A TLSA record already existed in the DNS server with name ",
+        "A TLSA record already existed in the DNS server with the specified domain name ",
         recordName
       );
     }
   } catch (error) {
-    console.log(error?.message ?? "unable to update dns records");
+    console.log(error?.message ?? "Unable To Update TLSA DNS Record");
   }
 }
 
@@ -225,7 +225,7 @@ async function getDomain(domain) {
 }
 
 async function main() {
-  console.log("health check script running->>>>");
+  console.log("Frontend Health Check Script Is Active & Running");
   await createSelfDNSRecord();
   await scheduleUpdate();
 }
