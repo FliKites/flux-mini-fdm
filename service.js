@@ -15,7 +15,7 @@ const {
   checkConnection,
 } = require("./utils/utils");
 
-const configFile = "/etc/nginx/nginx.conf";
+const configFile = process.env.NGINX_CONFIG || "/etc/nginx/nginx.conf";
 const appName = process.env.APP_NAME || "explorer";
 const appPort = process.env.APP_PORT || 39185;
 const appDomain = process.env.DOMAIN || "";
@@ -111,7 +111,7 @@ async function updateList() {
     } catch (err) {
       console.log(err);
     }
-    await timer.setTimeout(1000 * 60 * 20);
+    await timer.setTimeout(1000 * (process.env?.BACKEND_HEALTH_INTERVAL ? +process.env?.BACKEND_HEALTH_INTERVAL : 1200));
   }
 }
 
@@ -141,8 +141,8 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
 }
 
 async function startUP() {
-  const filePath = process.env.CERT_PATH;
-  const certScript = process.env.CERT_SCRIPT_PATH;
+  const filePath = process.env.CERT_PATH || '/etc/letsencrypt/live';
+  const certScript = process.env.CERT_SCRIPT_PATH || '/certs.sh';
   try {
     if (!fs.existsSync(filePath)) {
       let count = 0;
