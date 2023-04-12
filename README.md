@@ -128,8 +128,7 @@ You can have the software auto create the zone for your Handshake domain, or you
 you can obtain the DS record and follow these directions to place it on chain. [Watch Video](https://youtu.be/1G94kPPQtEI)
 
 
-
-HOW IT WORKS
+# HOW IT WORKS
 
 
  ## Adding Your Handshake Domain Name To Varo For Management
@@ -143,10 +142,11 @@ HOW IT WORKS
    You must ensure that you have these environment variables set when deploying, in order to create the zone and set the record on Varo:
    
    
-
-   `DOMAIN=<your-handshake-domain>`
-   `DNS_SERVER_ADDRESS=https://varo.domains/api`
-   `DNS_SERVER_API_KEY=<varo-api-key>`
+   ```
+   DOMAIN=<your-handshake-domain>
+   DNS_SERVER_ADDRESS=https://varo.domains/api
+   DNS_SERVER_API_KEY=<varo-api-key>
+  ```
 
    If your frontend servers can resolve Handshake domains you can use `https://varo/api` for the endpoint.
 
@@ -156,7 +156,7 @@ HOW IT WORKS
    
    Visit https://varo.domains/sites then select manage next to your domain. The DS record is towards the bottom of the page.
 
-   [Click here to learn how to set the DS record on the Handshake Blockchain](https://help.dyn.com/domain-registration/ds-records/)
+   [Click here to learn how to set the DS record on the Handshake Blockchain](https://youtu.be/1G94kPPQtEI)
 
 
 
