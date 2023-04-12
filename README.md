@@ -125,7 +125,7 @@ https://home.runonflux.io/apps/registerapp or https://jetpack2.app.runonflux.io/
 6. You need to set the DS record on the Handshake chain for your Domain. You will get the DS record from the Varo dashboard from the "Manage" section of your domain. 
 
 You can have the software auto create the zone for your Handshake domain, or you can manually create. Once the zone is created, 
-you can obtain the DS record and follow these directions to place it on chain.
+you can obtain the DS record and follow these directions to place it on chain. [Watch Video](https://youtu.be/1G94kPPQtEI)
 
 
 
