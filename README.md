@@ -37,7 +37,7 @@ You can self host this software/repo with a static IP address from your Internet
 
 - Auto-create TLSA record in DNS server for Handshake Domain (if non-existent)
 
-- Easily set the Flux nodes you want to use for the API calls that get Flux backend IPs in `utils/ips.txt
+- Easily set the Flux nodes you want to use for the API calls that get Flux backend IPs in `utils/ips.txt`
 
 - Stores the TLSA record as a file in `/etc/letsencrypt/live` and in log output, for reference.
 
