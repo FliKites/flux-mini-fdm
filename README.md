@@ -371,7 +371,7 @@ docker run --name lb-letsencrypt -d \
 
 Their are a few things you need to do in order to run this on Akash. 
 
-1. You need to ensure that the `endpoints:` directive is unique 
+1. You need to ensure that the `endpoints:` directive is unique, and that all of the `ip:` directives match that name.
 2. You need to update 3 ENV varaibles.
    `APP_NAME=` This should be the name of your app on Flux.
    `APP_PORT=` This should be the port of the Flux component.
