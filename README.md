@@ -366,3 +366,81 @@ docker run --name lb-letsencrypt -d \
     -p 80:80 -p 443:443 \
     wirewrex/flux-mini-fdm:latest
 ```
+
+## Run The Container On Akash
+
+Their are a few things you need to do in order to run this on Akash. 
+
+1. You need to ensure that the `endpoints:` directive is unique 
+2. You need to update 3 ENV varaibles.
+   `APP_NAME=` This should be the name of your app on Flux.
+   `APP_PORT=` This should be the port of the Flux component.
+   `DNS_SERVER_API_KEY=` This should be your varo DNS API key. 
+
+   (Get the API key from settings page at https://varo.domains or https://varo on handshake - you must signup first)
+
+3. You need to update Varo DNS server to use the actual leased IP of you Akash Instance. It will add the hosts IP, and you must change it in order for it to work. You can obtain the leased IP from the Lease Details page after deployment. 
+
+
+```
+version: '2.0'
+endpoints:
+ fdmep1:
+   kind: ip
+services:
+  fdm:
+    image: 'wirewrex/flux-mini-fdm:latest'
+    expose:
+      - port: 80
+        as: 80
+        to:
+          - global: true
+            ip: fdmep1
+      - port: 443
+        as: 443
+        to:
+          - global: true
+            ip: fdmep1
+    env:
+     - CERT=self
+     - APP_NAME=<your-flux-app-name>
+     - APP_PORT=<your-flux-app-port>
+     - DOMAIN=handshake.domain
+     - DNS_SERVER_ADDRESS=https://varo.domains/api
+     - DNS_SERVER_API_KEY=<your-api-key>
+     - FRONTEND_HEALTH_INTERVAL=10
+     - BACKEND_HEALTH_INTERVAL=60
+    params:
+      storage:
+        data:
+          mount: /etc/letsencrypt/live
+          readOnly: false
+profiles:
+  compute:
+    fdm:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1GB
+        storage:
+          - size: 1Gi
+          - name: data
+            size: 1Gi
+            attributes:
+              persistent: true
+              class: beta3
+  placement:
+    dcloud:
+      attributes:
+      ip-lease: true
+      pricing:
+        fdm:
+          denom: uakt
+          amount: 4000
+deployment:
+  fdm:
+    dcloud:
+      profile: fdm
+      count: 1
+      ```
