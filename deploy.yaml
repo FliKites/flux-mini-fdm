@@ -1,0 +1,60 @@
+version: '2.0'
+endpoints:
+ fdmep1:
+   kind: ip
+services:
+  fdm:
+    image: 'wirewrex/flux-mini-fdm:latest'
+    expose:
+      - port: 80
+        as: 80
+        to:
+          - global: true
+            ip: fdmep1
+      - port: 443
+        as: 443
+        to:
+          - global: true
+            ip: fdmep1
+    env:
+     - CERT=self
+     - APP_NAME=<your-flux-app-name>
+     - APP_PORT=<your-flux-app-port>
+     - DOMAIN=handshake.domain
+     - DNS_SERVER_ADDRESS=https://varo.domains/api
+     - DNS_SERVER_API_KEY=<your-api-key>
+     - FRONTEND_HEALTH_INTERVAL=10
+     - BACKEND_HEALTH_INTERVAL=60
+    params:
+      storage:
+        data:
+          mount: /etc/letsencrypt/live
+          readOnly: false
+profiles:
+  compute:
+    fdm:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1GB
+        storage:
+          - size: 1Gi
+          - name: data
+            size: 1Gi
+            attributes:
+              persistent: true
+              class: beta3
+  placement:
+    dcloud:
+      attributes:
+      ip-lease: true
+      pricing:
+        fdm:
+          denom: uakt
+          amount: 4000
+deployment:
+  fdm:
+    dcloud:
+      profile: fdm
+      count: 1
