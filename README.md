@@ -382,6 +382,15 @@ Their are a few things you need to do in order to run this on Akash.
 3. You need to update Varo DNS server to use the actual leased IP of you Akash Instance. It will add the hosts IP, and you must change it in order for it to work. You can obtain the leased IP from the Lease Details page after deployment. 
 
 
+
+Take the contents of the SDL file below with the proper changes and paste it into one of the below consoles: 
+
+https://console.akash.network/new-deployment 
+
+https://deploy.cloudmos.io/new-deployment?step=edit-deployment
+
+PS: You will need to install the Keplr Wallet Extension in order to deploy. You must also have your wallet loaded with at least 5 Akash. 
+
 ```
 version: '2.0'
 endpoints:
