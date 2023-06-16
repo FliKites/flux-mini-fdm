@@ -3,6 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 const axios = require("axios");
 const readline = require("readline");
+const gamedig = require("gamedig");
 const fs = require("fs");
 const nodecmd = require("node-cmd");
 const util = require("util");
@@ -78,11 +79,36 @@ async function getApplicationIP(app_name) {
       }
       return ip;
     });
-
-    return commonIps;
+    const liveIPs = [];
+    for (const ip of commonIps) {
+      const isActive = await checkMinecraftActivity(ip, appPort);
+      if (isActive) {
+        liveIPs.push(ip);
+      } else {
+        console.log(`Minecraft server ip ${ip} is not active`);
+      }
+    }
+    return liveIPs;
   } catch (error) {
     console.error(error?.message ?? error);
     return [];
+  }
+}
+
+async function checkMinecraftActivity(ip, app_port) {
+  try {
+    const response = await gamedig.query({
+      type: "minecraft",
+      host: ip,
+      port: app_port,
+    });
+
+    return response?.ping; // Check if Minecraft server is online
+  } catch (error) {
+    console.log(
+      `Error while checking Minecraft activity for server ${ip}: ${error}`
+    );
+    return false;
   }
 }
 
@@ -111,7 +137,12 @@ async function updateList() {
     } catch (err) {
       console.log(err);
     }
-    await timer.setTimeout(1000 * (process.env?.BACKEND_HEALTH_INTERVAL ? +process.env?.BACKEND_HEALTH_INTERVAL : 1200));
+    await timer.setTimeout(
+      1000 *
+        (process.env?.BACKEND_HEALTH_INTERVAL
+          ? +process.env?.BACKEND_HEALTH_INTERVAL
+          : 1200)
+    );
   }
 }
 
@@ -141,8 +172,8 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
 }
 
 async function startUP() {
-  const filePath = process.env.CERT_PATH || '/etc/letsencrypt/live';
-  const certScript = process.env.CERT_SCRIPT_PATH || '/certs.sh';
+  const filePath = process.env.CERT_PATH || "/etc/letsencrypt/live";
+  const certScript = process.env.CERT_SCRIPT_PATH || "/certs.sh";
   try {
     if (!fs.existsSync(filePath)) {
       let count = 0;
@@ -155,7 +186,10 @@ async function startUP() {
           break;
         }
         await timer.setTimeout(
-          1000 * (process.env?.CERT_RETRY_DELAY ? +process.env?.CERT_RETRY_DELAY : 60)
+          1000 *
+            (process.env?.CERT_RETRY_DELAY
+              ? +process.env?.CERT_RETRY_DELAY
+              : 60)
         );
       }
     } else {
