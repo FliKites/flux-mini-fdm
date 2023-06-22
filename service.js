@@ -137,12 +137,14 @@ async function updateList() {
     } catch (err) {
       console.log(err);
     }
-    await timer.setTimeout(
-      1000 *
-        (process.env?.BACKEND_HEALTH_INTERVAL
-          ? +process.env?.BACKEND_HEALTH_INTERVAL
-          : 1200)
-    );
+    // await timer.setTimeout(
+    //   1000 *
+    //     (process.env?.BACKEND_HEALTH_INTERVAL
+    //       ? +process.env?.BACKEND_HEALTH_INTERVAL
+    //       : 1200)
+    // );
+    const interval = (process.env?.BACKEND_HEALTH_INTERVAL ?? 2) * 60 * 1000;
+    await new Promise((resolve) => setTimeout(resolve, interval));
   }
 }
 
@@ -185,12 +187,8 @@ async function startUP() {
           updateList();
           break;
         }
-        await timer.setTimeout(
-          1000 *
-            (process.env?.CERT_RETRY_DELAY
-              ? +process.env?.CERT_RETRY_DELAY
-              : 60)
-        );
+        const interval = (process.env?.CERT_RETRY_DELAY ?? 1) * 60 * 1000;
+        await new Promise((resolve) => setTimeout(resolve, interval));
       }
     } else {
       updateList();
