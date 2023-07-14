@@ -247,7 +247,7 @@ You can create a level of redundancy for your frontends, by having them health c
 
 If the root directory contains a file named `iplist.txt` it will perform the automated health check and DNS actions.
 
-You can specify 1 IP per line in the `ipslist.txt`
+You can specify 1 IP per line in the `iplist.txt`
 
 Each IP that is specified will be health checked at the interval rate that is specified using `FRONTEND_HEALTH_INTERVAL=`
 
