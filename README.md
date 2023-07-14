@@ -2,7 +2,10 @@
 
 Use this to deploy your own front-end infrastructure for your Flux applications. 
 
-It supports Handshake & ICANN Domains via the [Varo DNS Service Provider](https://varo.domains) - [Self Hosted Version of Varo](https://github.com/Nathanwoodburn/HNS-server/tree/main/varo)
+It supports Handshake & ICANN Domains via 
+1. [Varo DNS Managed Service Provider](https://varo.domains) 
+
+2. [Self Hosted Version of Varo](https://github.com/Nathanwoodburn/HNS-server/tree/main/varo)
 
 This tutorial will be specifically for using this application in a docker environment.
 
