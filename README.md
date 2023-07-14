@@ -57,8 +57,8 @@ docker run --name flux-fdm-hns -d \
     -e CERT=self \
     -e DNS_SERVER_ADDRESS=https://varo.domains/api \
     -e DNS_SERVER_API_KEY=<varo-api-key> \
-    -e FRONTEND_HEALTH_INTERVAL=1
-    -e BACKEND_HEALTH_INTERVAL=60
+    -e FRONTEND_HEALTH_INTERVAL=1 \
+    -e BACKEND_HEALTH_INTERVAL=60 \
     -p 80:80 -p 443:443 \
     wirewrex/flux-mini-fdm:latest
 ```
