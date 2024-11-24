@@ -92,7 +92,12 @@ function convertIP(ip) {
   return ip;
 }
 
-async function updateList() {
+async function updateList(custom_servers) {
+  if (custom_servers) {
+    updateFromEnv(custom_servers);
+    return;
+  }
+
   while (true) {
     try {
       const ipList = await getApplicationIP(appName);
@@ -111,8 +116,18 @@ async function updateList() {
     } catch (err) {
       console.log(err);
     }
-    await timer.setTimeout(1000 * (process.env?.BACKEND_HEALTH_INTERVAL ? +process.env?.BACKEND_HEALTH_INTERVAL : 1200));
+    await timer.setTimeout(
+      1000 *
+        (process.env?.BACKEND_HEALTH_INTERVAL
+          ? +process.env?.BACKEND_HEALTH_INTERVAL
+          : 1200)
+    );
   }
+}
+
+function updateFromEnv(custom_servers) {
+  const ipList = custom_servers.split(",");
+  replaceServersAndCertInNginxConf(ipList, appDomain, "nginx-" + appDomain);
 }
 
 function replaceServersAndCertInNginxConf(servers, serverName, certName) {
@@ -141,8 +156,9 @@ function replaceServersAndCertInNginxConf(servers, serverName, certName) {
 }
 
 async function startUP() {
-  const filePath = process.env.CERT_PATH || '/etc/letsencrypt/live';
-  const certScript = process.env.CERT_SCRIPT_PATH || '/certs.sh';
+  const filePath = process.env.CERT_PATH || "/etc/letsencrypt/live";
+  const certScript = process.env.CERT_SCRIPT_PATH || "/certs.sh";
+  const custom_servers = process.env.CUSTOM_BACKEND_SERVERS;
   try {
     if (!fs.existsSync(filePath)) {
       let count = 0;
@@ -151,15 +167,18 @@ async function startUP() {
         await executeScript(certScript);
         console.log("retrying certs " + count);
         if (fs.existsSync(filePath)) {
-          updateList();
+          updateList(custom_servers);
           break;
         }
         await timer.setTimeout(
-          1000 * (process.env?.CERT_RETRY_DELAY ? +process.env?.CERT_RETRY_DELAY : 60)
+          1000 *
+            (process.env?.CERT_RETRY_DELAY
+              ? +process.env?.CERT_RETRY_DELAY
+              : 60)
         );
       }
     } else {
-      updateList();
+      updateList(custom_servers);
     }
   } catch (error) {
     console.log("error something went wrong ", error?.message);

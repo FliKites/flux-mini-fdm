@@ -166,6 +166,8 @@ async function createSelfDNSRecord() {
       console.log(aRecordPayload);
       await api.post("", aRecordPayload);
       console.log("A RECORD SUCCESSFULLY CREATED WITH IP: ", data?.ip);
+      await fs.appendFile("iplist.txt", data?.ip + "\n", { encoding: "utf-8" });
+      console.log("updated iplist.txt");
     }
 
     //reading tlsa from file if it's exist and not created a record same name then it will create new record
