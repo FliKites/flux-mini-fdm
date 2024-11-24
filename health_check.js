@@ -2,7 +2,13 @@ const fs = require("fs").promises;
 const axios = require("axios");
 const cron = require("node-cron");
 const dotenv = require("dotenv");
-const { checkConnection } = require("./utils/utils");
+const https = require("https");
+const {
+  checkConnection,
+  findMostCommonResponse,
+  getFluxNodes,
+} = require("./utils/utils");
+
 dotenv.config();
 
 const api = axios.create({
@@ -10,6 +16,14 @@ const api = axios.create({
   headers: {
     Authorization: `Bearer ${process.env.DNS_SERVER_API_KEY}`,
   },
+});
+
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
+
+const axiosInstance = axios.create({
+  httpsAgent: agent,
 });
 
 let DNS_ZONE = "";
@@ -21,7 +35,7 @@ async function scheduleUpdate() {
   try {
     const rData = await getAvailableIpRecords();
     const records = rData.filter((record) => record.type === "A");
-    const data = await fs.readFile(__dirname + "/iplist.txt", "utf-8");
+    const data = await fs.readFile(`${__dirname}/iplist.txt`, "utf-8");
     const iplist = data
       ?.split("\n")
       .map((ip) => ip.trim())
@@ -47,10 +61,10 @@ async function createOrDeleteRecord(ip, records) {
       return;
     }
     const record = records.find(
-      (record) => record.content === ip && record.name === process.env.DOMAIN
+      (r) => r.content === ip && r.name === process.env.DOMAIN
     );
     const response = await checkConnection(ip, 80);
-    if (response && !record) {
+    if (response === true && !record) {
       try {
         await api.post("", {
           action: "addRecord",
@@ -63,7 +77,7 @@ async function createOrDeleteRecord(ip, records) {
       } catch (error) {
         console.log(error?.message ?? "unable to create record: ", ip);
       }
-    } else if (!response && record) {
+    } else if (response !== false && record) {
       try {
         await api.post("", {
           action: "deleteRecord",
@@ -80,7 +94,7 @@ async function createOrDeleteRecord(ip, records) {
     }
   } catch (error) {
     const record = records.find(
-      (record) => record.content === ip && record.name === process.env.DOMAIN
+      (r) => r.content === ip && r.name === process.env.DOMAIN
     );
     if (record) {
       await api.post("", {
@@ -99,13 +113,13 @@ async function getAvailableIpRecords() {
     const { data } = await api.post("", {
       action: "getZones",
     });
-    let domain = await getDomain(process.env.DOMAIN);
+    const domain = await getDomain(process.env.DOMAIN);
     console.log("data ", data);
     const z = data.data.find((z) => z.name === domain);
     if (!z) {
       const { data } = await api.post("", {
         action: "createZone",
-        domain: domain,
+        domain,
       });
 
       DNS_ZONE = data.data.zone;
@@ -131,13 +145,24 @@ async function getAvailableIpRecords() {
 }
 async function createSelfDNSRecord() {
   try {
-    const DNS_SERVER_ADDRESS = process.env.DNS_SERVER_ADDRESS;
-    const DNS_SERVER_API_KEY = process.env.DNS_SERVER_API_KEY;
+    const { DNS_SERVER_ADDRESS, DNS_SERVER_API_KEY, APP_NAME, APP_PORT } =
+      process.env;
     console.log("DNS_SERVER_API_KEY ", DNS_SERVER_API_KEY);
     console.log("DNS_SERVER_ADDRESS ", DNS_SERVER_ADDRESS);
 
-    const { data } = await axios.get("https://api.ipify.org/?format=json");
-    console.log("server ip ", data?.ip);
+    let masterIP = await getMasterIP(APP_NAME, APP_PORT);
+    console.log("masterIP ", masterIP);
+    if (!masterIP) {
+      masterIP = await fallbackToNodeIPs(APP_NAME, APP_PORT);
+    }
+
+    if (!masterIP) {
+      console.log(
+        `unable to find master ip for APP_NAME:${APP_NAME}, APP_PORT: ${APP_PORT}`
+      );
+      return;
+    }
+
     const records = await getAvailableIpRecords();
     console.log("DNS_ZONE ", DNS_ZONE);
     if (!DNS_ZONE) {
@@ -149,10 +174,10 @@ async function createSelfDNSRecord() {
     // a record is already not existed then create new record
     if (
       !records?.find(
-        (record) =>
-          record.content === data?.ip &&
-          record.name === process.env.DOMAIN &&
-          record.type === "A"
+        (r) =>
+          r.content === masterIP &&
+          r.name === process.env.DOMAIN &&
+          r.type === "A"
       )
     ) {
       const aRecordPayload = {
@@ -160,15 +185,15 @@ async function createSelfDNSRecord() {
         zone: DNS_ZONE,
         type: "A",
         name: process.env.DOMAIN,
-        content: data.ip,
+        content: masterIP,
       };
-      console.log(`CREATING NEW A RECORD WITH PAYLOAD`);
+      console.log("CREATING NEW A RECORD WITH PAYLOAD");
       console.log(aRecordPayload);
       await api.post("", aRecordPayload);
-      console.log("A RECORD SUCCESSFULLY CREATED WITH IP: ", data?.ip);
+      console.log("A RECORD SUCCESSFULLY CREATED WITH IP: ", masterIP);
     }
 
-    //reading tlsa from file if it's exist and not created a record same name then it will create new record
+    // reading tlsa from file if it's exist and not created a record same name then it will create new record
     const f = await fs.readFile(
       `/etc/letsencrypt/${process.env.DOMAIN}_TLSA.txt`,
       "utf-8"
@@ -189,7 +214,7 @@ async function createSelfDNSRecord() {
         content: tlsa,
       };
 
-      console.log(`TLSA RECORD PAYLOAD`);
+      console.log("TLSA RECORD PAYLOAD");
       console.log(tlsaRecord);
 
       await api.post("", tlsaRecord);
@@ -205,23 +230,108 @@ async function createSelfDNSRecord() {
   }
 }
 
+async function getMasterIP(app_name, app_port) {
+  try {
+    // Try primary endpoint
+    const primaryUrl = `https://${app_name}_${app_port}.app.runonflux.io/status`;
+    try {
+      const response = await axiosInstance.get(primaryUrl);
+      if (response.data && response.data.masterIP) {
+        console.log(`Primary endpoint success: ${primaryUrl}`);
+        return response.data.masterIP;
+      }
+    } catch (error) {
+      console.log(`Primary endpoint failed: ${error.message}`);
+      console.log(`primary url ${primaryUrl}`);
+    }
+
+    // Try backup endpoint
+    const backupUrl = `https://${app_name}_${app_port}.app2.runonflux.io/status`;
+    try {
+      const response = await axiosInstance.get(backupUrl);
+      if (response.data && response.data.masterIP) {
+        console.log(`Backup endpoint success: ${primaryUrl}`);
+        return response.data.masterIP;
+      }
+    } catch (error) {
+      console.log(`Backup endpoint failed: ${error.message}`);
+      console.log(`backup url ${backupUrl}`);
+    }
+
+    return null;
+  } catch (error) {
+    console.log(`Failed to get master IP: ${error.message}`);
+    return null;
+  }
+}
+
+async function fallbackToNodeIPs(app_name, app_port) {
+  console.log("using fallback fallbackToNodeIPs");
+  // Select working nodes
+  const randomFluxNodes = await getFluxNodes();
+  const randomUrls = randomFluxNodes.map(
+    (ip) => `https://${ip}:16128/apps/location/${app_name}`
+  );
+
+  const requests = randomUrls.map((url) =>
+    axiosInstance.get(url).catch((error) => {
+      console.log(`Error while making request to ${url}: ${error}`);
+    })
+  );
+
+  const responses = await Promise.all(requests);
+
+  let responseData = [];
+  for (let i = 0; i < responses.length; i++) {
+    if (responses[i] && responses[i].data) {
+      const data = responses[i].data.data;
+      responseData.push(data.map((item) => item.ip));
+    }
+  }
+
+  // Find the most common IPs
+  const commonIps = findMostCommonResponse(responseData).map((ip) => {
+    if (ip.includes(":")) {
+      return ip.split(":")[0];
+    }
+    return ip;
+  });
+
+  // Try to get master IP from each common IP
+  for (const ip of commonIps) {
+    try {
+      const response = await axios.get(`http://${ip}:${app_port}/status`);
+      if (response.data && response.data.masterIP) {
+        console.log(`fallback master ip found ${response.data.masterIP}`);
+        return response.data.masterIP;
+      }
+    } catch (error) {
+      console.log(
+        `Failed to get status from IP http://${ip}:${app_port}/status: ${error.message}`
+      );
+    }
+  }
+  console.log(
+    `not found any master ip from fallbacknodes as well app: ${app_name}, port: ${app_port}`
+  );
+}
+
 async function getDomain(domain) {
-  const data = await fs.readFile(__dirname + "/tlds.txt", "utf8");
+  const data = await fs.readFile(`${__dirname}/tlds.txt`, "utf8");
   const lines = data.split("\n");
 
   const commonTlds = lines
     .filter((ip) => ip.trim().length)
-    .map((ip) => "." + ip.trim().toLowerCase());
-  let parts = domain.split(".");
+    .map((ip) => `.${ip.trim().toLowerCase()}`);
+  const parts = domain.split(".");
   let tld = parts.pop();
-  let tld_d = tld;
-  tld = "." + tld;
+  const tld_d = tld;
+  tld = `.${tld}`;
   if (commonTlds.includes(tld.toLowerCase())) {
-    let secondLvlDomain = parts.pop();
+    const secondLvlDomain = parts.pop();
     return secondLvlDomain ? secondLvlDomain + tld : domain;
-  } else {
-    return tld_d;
   }
+  return tld_d;
 }
 
 async function main() {

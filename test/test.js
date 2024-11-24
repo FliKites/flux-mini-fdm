@@ -1,4 +1,5 @@
 const fs = require("fs");
+
 function replaceServersAndCertInNginxConf(servers, serverName, certName) {
   const confPath = `${__dirname}\\nginx.conf`;
   const conf = fs.readFileSync(confPath, "utf8");
